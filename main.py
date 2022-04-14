@@ -5,8 +5,7 @@ import time
 from itertools import cycle
 from statistics import median
 
-from curses_tools import draw_frame, read_controls, get_frame_size, \
-    get_max_frames_size
+from curses_tools import draw_frame, read_controls, get_max_frames_size
 from game_utils import get_symbol_coordinates, make_delay, get_frames
 
 
@@ -80,8 +79,8 @@ async def spaceship(canvas, row, column, frames):
 
 def draw(canvas):
     canvas.border()
-    curses.curs_set(False)
     canvas.nodelay(True)
+    curses.curs_set(False)
 
     symbols = '+*.:'
     tic_timeout = 0.1
@@ -90,8 +89,7 @@ def draw(canvas):
     max_row, max_column = canvas.getmaxyx()
     frames = get_frames('frames')
     coroutines = [fire(canvas, max_row // 2, max_column // 2),
-                  spaceship(canvas, max_row // 2, max_column // 2,
-                            frames)]
+                  spaceship(canvas, max_row // 2, max_column // 2, frames)]
     coroutines.extend([
         blink(canvas,
               **get_symbol_coordinates(max_row, max_column),
