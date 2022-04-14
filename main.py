@@ -3,8 +3,10 @@ import curses
 import random
 import time
 from itertools import cycle
+from statistics import median
 
-from curses_tools import draw_frame, read_controls
+from curses_tools import draw_frame, read_controls, get_frame_size, \
+    get_max_frames_size
 from game_utils import get_symbol_coordinates, make_delay, get_frames
 
 
@@ -56,10 +58,20 @@ async def fire(canvas, start_row, start_column,
 
 async def spaceship(canvas, row, column, frames):
     current_row, current_column = row, column
+    min_row, min_column = 1, 1
+    max_row, max_column = canvas.getmaxyx()
+    frame_rows, frame_columns = get_max_frames_size(frames)
+    max_row -= frame_rows + 1
+    max_column -= frame_columns + 1
+
     for frame in cycle(frames):
         row_offset, column_offset, space_pressed = read_controls(canvas)
-        current_row += row_offset
-        current_column += column_offset
+        current_row = median(
+            sorted([min_row, current_row+row_offset, max_row])
+        )
+        current_column = median(
+            sorted([min_column, current_column+column_offset, max_column])
+        )
 
         draw_frame(canvas, current_row, current_column, frame)
         await asyncio.sleep(0)
@@ -78,7 +90,8 @@ def draw(canvas):
     max_row, max_column = canvas.getmaxyx()
     frames = get_frames('frames')
     coroutines = [fire(canvas, max_row // 2, max_column // 2),
-                  spaceship(canvas, max_row // 2, max_column // 2, frames)]
+                  spaceship(canvas, max_row // 2, max_column // 2,
+                            frames)]
     coroutines.extend([
         blink(canvas,
               **get_symbol_coordinates(max_row, max_column),
