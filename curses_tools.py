@@ -75,9 +75,7 @@ def get_frame_size(text):
 
 
 def get_max_frames_size(texts):
-    rows, columns = [], []
-    for text in texts:
-        row, column = get_frame_size(text)
-        rows.append(row)
-        columns.append(column)
-    return max(rows), max(columns)
+    sizes = [get_frame_size(text) for text in texts]
+    max_rows = max(sizes, key=lambda size: size[0])[0]
+    max_columns = max(sizes, key=lambda size: size[1])[1]
+    return max_rows, max_columns
