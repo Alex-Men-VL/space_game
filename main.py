@@ -4,7 +4,7 @@ import random
 import time
 from itertools import cycle
 
-from curses_tools import draw_frame
+from curses_tools import draw_frame, read_controls
 from game_utils import get_symbol_coordinates, make_delay, get_frames
 
 
@@ -55,15 +55,21 @@ async def fire(canvas, start_row, start_column,
 
 
 async def spaceship(canvas, row, column, frames):
+    current_row, current_column = row, column
     for frame in cycle(frames):
-        draw_frame(canvas, row, column, frame)
+        row_offset, column_offset, space_pressed = read_controls(canvas)
+        current_row += row_offset
+        current_column += column_offset
+
+        draw_frame(canvas, current_row, current_column, frame)
         await asyncio.sleep(0)
-        draw_frame(canvas, row, column, frame, negative=True)
+        draw_frame(canvas, current_row, current_column, frame, negative=True)
 
 
 def draw(canvas):
     canvas.border()
     curses.curs_set(False)
+    canvas.nodelay(True)
 
     symbols = '+*.:'
     tic_timeout = 0.1
