@@ -18,8 +18,6 @@ async def make_delay(delay):
 
 def get_frames(frame_folder):
     frames = []
-    if not os.path.isdir(frame_folder):
-        return frames
     for file_name in os.listdir(frame_folder):
         file_path = os.path.join(frame_folder, file_name)
         if not os.path.isfile(file_path):
