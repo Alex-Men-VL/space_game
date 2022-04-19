@@ -5,7 +5,11 @@ import time
 from itertools import cycle
 from statistics import median
 
-from curses_tools import draw_frame, read_controls, get_max_frames_size
+from curses_tools import (
+    draw_frame,
+    read_controls,
+    get_max_frames_size
+)
 from game_utils import (
     get_symbol_coordinates,
     make_delay,
@@ -47,8 +51,8 @@ async def fire(canvas, start_row, start_column,
 
     symbol = '-' if columns_speed else '|'
 
-    rows, columns = canvas.getmaxyx()
-    max_row, max_column = rows - 1, columns - 1
+    rows, columns = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+    max_row, max_column = rows - 1, columns - 1  # the coordinates of the last cell are 1 smaller
 
     curses.beep()
 
@@ -63,10 +67,11 @@ async def fire(canvas, start_row, start_column,
 async def spaceship(canvas, row, column, frames):
     current_row, current_column = row, column
     min_row, min_column = 1, 1
-    max_row, max_column = canvas.getmaxyx()
+    rows, columns = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+    max_row, max_column = rows - 1, columns - 1  # the coordinates of the last cell are 1 smaller
     frame_rows, frame_columns = get_max_frames_size(frames)
-    max_row -= frame_rows + 1
-    max_column -= frame_columns + 1
+    max_row -= frame_rows
+    max_column -= frame_columns
 
     for frame in cycle(get_frame_per_tic(frames)):
         row_offset, column_offset, space_pressed = read_controls(canvas, 3)
@@ -91,7 +96,8 @@ def draw(canvas):
     tic_timeout = 0.1
     stars_count = 100
 
-    max_row, max_column = canvas.getmaxyx()
+    rows, columns = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+    max_row, max_column = rows - 1, columns - 1  # the coordinates of the last cell are 1 smaller
     frames = get_frames('frames')
     coroutines = [fire(canvas, max_row // 2, max_column // 2),
                   spaceship(canvas, max_row // 2, max_column // 2, frames)]
