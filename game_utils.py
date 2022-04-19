@@ -1,5 +1,5 @@
 import asyncio
-import os.path
+import os
 import random
 
 
