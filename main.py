@@ -74,7 +74,7 @@ async def spaceship(canvas, row, column, frames):
     max_column -= frame_columns
 
     for frame in cycle(get_frame_per_tic(frames)):
-        row_offset, column_offset, space_pressed = read_controls(canvas, 3)
+        row_offset, column_offset, space_pressed = read_controls(canvas)
         current_row = median(
             [min_row, current_row+row_offset, max_row]
         )
