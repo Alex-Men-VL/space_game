@@ -4,14 +4,14 @@
 
 ## Как запустить
 
-- Скачайте код:
+Скачайте код:
 
 ```shell
 $ git clone https://github.com/Alex-Men-VL/space_game.git
 $ cd space_game
 ```
 
-- Запустите скрипт:
+Запустите скрипт:
 
 ```shell
 $ python3 main.py
