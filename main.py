@@ -6,7 +6,12 @@ from itertools import cycle
 from statistics import median
 
 from curses_tools import draw_frame, read_controls, get_max_frames_size
-from game_utils import get_symbol_coordinates, make_delay, get_frames
+from game_utils import (
+    get_symbol_coordinates,
+    make_delay,
+    get_frames,
+    get_frame_per_tic
+)
 
 
 async def blink(canvas, row, column, symbol='*', delay=0):
@@ -63,8 +68,8 @@ async def spaceship(canvas, row, column, frames):
     max_row -= frame_rows + 1
     max_column -= frame_columns + 1
 
-    for frame in cycle(frames):
-        row_offset, column_offset, space_pressed = read_controls(canvas)
+    for frame in cycle(get_frame_per_tic(frames)):
+        row_offset, column_offset, space_pressed = read_controls(canvas, 3)
         current_row = median(
             sorted([min_row, current_row+row_offset, max_row])
         )

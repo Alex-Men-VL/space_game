@@ -27,3 +27,9 @@ def get_frames(frame_folder):
             frame = frame_file.read()
             frames.append(frame)
     return frames
+
+
+def get_frame_per_tic(frames, tic_count=2):
+    for frame in frames:
+        for _ in range(tic_count):
+            yield frame
