@@ -71,10 +71,10 @@ async def spaceship(canvas, row, column, frames):
     for frame in cycle(get_frame_per_tic(frames)):
         row_offset, column_offset, space_pressed = read_controls(canvas, 3)
         current_row = median(
-            sorted([min_row, current_row+row_offset, max_row])
+            [min_row, current_row+row_offset, max_row]
         )
         current_column = median(
-            sorted([min_column, current_column+column_offset, max_column])
+            [min_column, current_column+column_offset, max_column]
         )
 
         draw_frame(canvas, current_row, current_column, frame)
