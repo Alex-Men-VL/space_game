@@ -89,6 +89,10 @@ async def spaceship(canvas, row, column, frames):
             [min_column, current_column+column_speed, max_column]
         )
 
+        if space_pressed:
+            fire_column = current_column + frame_columns // 2  # as current_column points to the left edge of the frame
+            COROUTINES.append(fire(canvas, current_row, fire_column))
+
         draw_frame(canvas, current_row, current_column, frame)
         await asyncio.sleep(0)
         draw_frame(canvas, current_row, current_column, frame, negative=True)
@@ -135,7 +139,6 @@ def draw(canvas):
     max_row, max_column = rows - 1, columns - 1  # the coordinates of the last cell are 1 smaller
     frames = get_frames('frames')
     COROUTINES.extend([
-        fire(canvas, max_row // 2, max_column // 2),
         spaceship(canvas, max_row // 2, max_column // 2, frames['rocket']),
         fill_orbit_with_garbage(canvas, frames['trash'])
     ])
