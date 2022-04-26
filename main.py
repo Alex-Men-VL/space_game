@@ -17,6 +17,8 @@ from game_utils import (
     get_frame_per_tic
 )
 
+COROUTINES = []
+
 
 async def blink(canvas, row, column, symbol='*', delay=0):
     await make_delay(delay)
@@ -87,6 +89,34 @@ async def spaceship(canvas, row, column, frames):
         draw_frame(canvas, current_row, current_column, frame, negative=True)
 
 
+async def fill_orbit_with_garbage(canvas, frames):
+    _, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+    columns_number -= 1  # the coordinates of the last cell are 1 smaller
+
+    while True:
+        column = random.randint(1, columns_number)
+        frame = random.choice(frames)
+        COROUTINES.append(fly_garbage(canvas, column, frame))
+        await make_delay(10)
+
+
+async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
+    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
+
+    rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+    columns_number -= 1  # the coordinates of the last cell are 1 smaller
+    _, frame_columns = get_max_frames_size([garbage_frame])
+
+    column = median([0, column, columns_number - frame_columns])
+    row = 0
+
+    while row < rows_number:
+        draw_frame(canvas, row, column, garbage_frame)
+        await asyncio.sleep(0)
+        draw_frame(canvas, row, column, garbage_frame, negative=True)
+        row += speed
+
+
 def draw(canvas):
     canvas.border()
     canvas.nodelay(True)
@@ -99,9 +129,12 @@ def draw(canvas):
     rows, columns = canvas.getmaxyx()  # legacy curses feature, returns wrong values
     max_row, max_column = rows - 1, columns - 1  # the coordinates of the last cell are 1 smaller
     frames = get_frames('frames')
-    coroutines = [fire(canvas, max_row // 2, max_column // 2),
-                  spaceship(canvas, max_row // 2, max_column // 2, frames)]
-    coroutines.extend([
+    COROUTINES.extend([
+        fire(canvas, max_row // 2, max_column // 2),
+        spaceship(canvas, max_row // 2, max_column // 2, frames['rocket']),
+        fill_orbit_with_garbage(canvas, frames['trash'])
+    ])
+    COROUTINES.extend([
         blink(canvas,
               **get_symbol_coordinates(max_row, max_column),
               symbol=random.choice(symbols),
@@ -109,11 +142,11 @@ def draw(canvas):
     ])
 
     while True:
-        for coroutine in coroutines.copy():
+        for coroutine in COROUTINES.copy():
             try:
                 coroutine.send(None)
             except StopIteration:
-                coroutines.remove(coroutine)
+                COROUTINES.remove(coroutine)
         canvas.refresh()
         time.sleep(tic_timeout)
 

@@ -17,7 +17,7 @@ async def make_delay(delay):
 
 
 def get_frames(frame_folder):
-    frames = []
+    frames = {}
     for file_name in os.listdir(frame_folder):
         file_path = os.path.join(frame_folder, file_name)
         if not os.path.isfile(file_path):
@@ -25,7 +25,8 @@ def get_frames(frame_folder):
 
         with open(file_path) as frame_file:
             frame = frame_file.read()
-            frames.append(frame)
+        frame_type = file_name.split('_')[0]
+        frames.setdefault(frame_type, []).append(frame)
     return frames
 
 
