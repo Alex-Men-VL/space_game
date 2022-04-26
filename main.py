@@ -10,6 +10,7 @@ from curses_tools import (
     read_controls,
     get_max_frames_size
 )
+from explosion import explode
 from game_utils import (
     get_symbol_coordinates,
     make_delay,
@@ -106,18 +107,19 @@ async def spaceship(canvas, row, column, frames):
         draw_frame(canvas, current_row, current_column, frame, negative=True)
 
 
-async def fill_orbit_with_garbage(canvas, frames):
+async def fill_orbit_with_garbage(canvas, frames, explosion_frames):
     rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
     max_row, max_column = rows_number - 1, columns_number - 1  # the coordinates of the last cell are 1 smaller
 
     while True:
         column = get_symbol_coordinates(max_row, max_column)['column']
         frame = random.choice(frames)
-        COROUTINES.append(fly_garbage(canvas, column, frame))
+        COROUTINES.append(fly_garbage(canvas, column, frame, explosion_frames))
         await make_delay(10)
 
 
-async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
+async def fly_garbage(canvas, column, garbage_frame, explosion_frames,
+                      speed=0.5):
     """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
 
     rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
@@ -138,6 +140,9 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
 
         if obstacle in OBSTACLES_IN_LAST_COLLISIONS:
             OBSTACLES.remove(obstacle)
+            center_row = row + frame_rows // 2
+            center_column = column + frame_columns // 2
+            await explode(canvas, center_row, center_column, explosion_frames)
             return
     OBSTACLES.remove(obstacle)
 
@@ -156,7 +161,7 @@ def draw(canvas):
     frames = get_frames('frames')
     COROUTINES.extend([
         spaceship(canvas, max_row // 2, max_column // 2, frames['rocket']),
-        fill_orbit_with_garbage(canvas, frames['trash']),
+        fill_orbit_with_garbage(canvas, frames['trash'], frames['explosion']),
     ])
     COROUTINES.extend([
         blink(canvas,
