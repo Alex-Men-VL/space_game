@@ -11,6 +11,7 @@ from curses_tools import (
     get_max_frames_size, get_frame_size
 )
 from explosion import explode
+from game_scenario import PHRASES, get_garbage_delay_tics
 from game_utils import (
     get_symbol_coordinates,
     make_delay,
@@ -23,6 +24,7 @@ from physics import update_speed
 COROUTINES = []
 OBSTACLES = []
 OBSTACLES_IN_LAST_COLLISIONS = []
+YEAR = 1957
 
 
 async def blink(canvas, row, column, symbol='*', delay=0):
@@ -113,7 +115,6 @@ async def spaceship(canvas, row, column, frames, gameover_frame):
                 return
 
 
-
 async def fill_orbit_with_garbage(canvas, frames, explosion_frames):
     rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
     max_row, max_column = rows_number - 1, columns_number - 1  # the coordinates of the last cell are 1 smaller
@@ -121,8 +122,13 @@ async def fill_orbit_with_garbage(canvas, frames, explosion_frames):
     while True:
         column = get_symbol_coordinates(max_row, max_column)['column']
         frame = random.choice(frames)
+        delay = get_garbage_delay_tics(YEAR)
+        if not delay:
+            await make_delay(1)
+            continue
+
         COROUTINES.append(fly_garbage(canvas, column, frame, explosion_frames))
-        await make_delay(10)
+        await make_delay(delay)
 
 
 async def fly_garbage(canvas, column, garbage_frame, explosion_frames,
@@ -167,6 +173,25 @@ async def show_gameover(canvas, gameover_frame):
         draw_frame(canvas, row, column, gameover_frame, negative=True)
 
 
+async def show_game_description(canvas):
+    row = column = 1
+    while True:
+        phrase = PHRASES.get(YEAR)
+        if phrase:
+            frame = f'{YEAR} - {phrase}'
+        else:
+            frame = str(YEAR)
+        draw_frame(canvas, row, column, frame)
+        await asyncio.sleep(0)
+        draw_frame(canvas, row, column, frame, negative=True)
+
+
+async def change_year():
+    global YEAR
+
+    while True:
+        YEAR += 1
+        await make_delay(10)
 
 
 def draw(canvas):
@@ -180,11 +205,14 @@ def draw(canvas):
 
     rows, columns = canvas.getmaxyx()  # legacy curses feature, returns wrong values
     max_row, max_column = rows - 1, columns - 1  # the coordinates of the last cell are 1 smaller
+
     frames = get_frames('frames')
     COROUTINES.extend([
         spaceship(canvas, max_row // 2, max_column // 2, frames['rocket'],
                   frames['gameover'][0]),
         fill_orbit_with_garbage(canvas, frames['trash'], frames['explosion']),
+        show_game_description(canvas),
+        change_year()
     ])
     COROUTINES.extend([
         blink(canvas,
