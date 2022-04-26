@@ -16,6 +16,7 @@ from game_utils import (
     get_frames,
     get_frame_per_tic
 )
+from physics import update_speed
 
 COROUTINES = []
 
@@ -68,20 +69,24 @@ async def fire(canvas, start_row, start_column,
 
 async def spaceship(canvas, row, column, frames):
     current_row, current_column = row, column
-    min_row, min_column = 1, 1
+    min_row = min_column = 1
     rows, columns = canvas.getmaxyx()  # legacy curses feature, returns wrong values
     max_row, max_column = rows - 1, columns - 1  # the coordinates of the last cell are 1 smaller
     frame_rows, frame_columns = get_max_frames_size(frames)
     max_row -= frame_rows
     max_column -= frame_columns
+    row_speed = column_speed = 0
 
     for frame in cycle(get_frame_per_tic(frames)):
         row_offset, column_offset, space_pressed = read_controls(canvas)
+        row_speed, column_speed = update_speed(row_speed, column_speed,
+                                               row_offset, column_offset)
+
         current_row = median(
-            [min_row, current_row+row_offset, max_row]
+            [min_row, current_row+row_speed, max_row]
         )
         current_column = median(
-            [min_column, current_column+column_offset, max_column]
+            [min_column, current_column+column_speed, max_column]
         )
 
         draw_frame(canvas, current_row, current_column, frame)
