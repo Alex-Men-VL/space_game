@@ -16,9 +16,12 @@ from game_utils import (
     get_frames,
     get_frame_per_tic
 )
+from obstacles import Obstacle
 from physics import update_speed
 
 COROUTINES = []
+OBSTACLES = []
+OBSTACLES_IN_LAST_COLLISIONS = []
 
 
 async def blink(canvas, row, column, symbol='*', delay=0):
@@ -65,6 +68,11 @@ async def fire(canvas, start_row, start_column,
         canvas.addstr(round(row), round(column), ' ')
         row += rows_speed
         column += columns_speed
+
+        for obstacle in OBSTACLES:
+            if obstacle.has_collision(row, column):
+                OBSTACLES_IN_LAST_COLLISIONS.append(obstacle)
+                return
 
 
 async def spaceship(canvas, row, column, frames):
@@ -114,16 +122,24 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
 
     rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
     columns_number -= 1  # the coordinates of the last cell are 1 smaller
-    _, frame_columns = get_max_frames_size([garbage_frame])
+    frame_rows, frame_columns = get_max_frames_size([garbage_frame])
 
     column = median([0, column, columns_number - frame_columns])
     row = 0
 
+    obstacle = Obstacle(row, column, frame_rows, frame_columns)
+    OBSTACLES.append(obstacle)
     while row < rows_number:
         draw_frame(canvas, row, column, garbage_frame)
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, garbage_frame, negative=True)
         row += speed
+        obstacle.row = row
+
+        if obstacle in OBSTACLES_IN_LAST_COLLISIONS:
+            OBSTACLES.remove(obstacle)
+            return
+    OBSTACLES.remove(obstacle)
 
 
 def draw(canvas):
@@ -140,7 +156,7 @@ def draw(canvas):
     frames = get_frames('frames')
     COROUTINES.extend([
         spaceship(canvas, max_row // 2, max_column // 2, frames['rocket']),
-        fill_orbit_with_garbage(canvas, frames['trash'])
+        fill_orbit_with_garbage(canvas, frames['trash']),
     ])
     COROUTINES.extend([
         blink(canvas,
