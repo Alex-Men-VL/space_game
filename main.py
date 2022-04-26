@@ -100,7 +100,7 @@ async def spaceship(canvas, row, column, frames, gameover_frame):
             [min_column, current_column+column_speed, max_column]
         )
 
-        if space_pressed:
+        if space_pressed and YEAR > 2020:
             fire_column = current_column + frame_columns // 2  # as current_column points to the left edge of the frame
             COROUTINES.append(fire(canvas, current_row, fire_column))
 
