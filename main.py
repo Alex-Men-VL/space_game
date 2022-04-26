@@ -90,11 +90,11 @@ async def spaceship(canvas, row, column, frames):
 
 
 async def fill_orbit_with_garbage(canvas, frames):
-    _, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
-    columns_number -= 1  # the coordinates of the last cell are 1 smaller
+    rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+    max_row, max_column = rows_number - 1, columns_number - 1  # the coordinates of the last cell are 1 smaller
 
     while True:
-        column = random.randint(1, columns_number)
+        column = get_symbol_coordinates(max_row, max_column)['column']
         frame = random.choice(frames)
         COROUTINES.append(fly_garbage(canvas, column, frame))
         await make_delay(10)
