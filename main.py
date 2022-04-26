@@ -8,7 +8,7 @@ from statistics import median
 from curses_tools import (
     draw_frame,
     read_controls,
-    get_max_frames_size
+    get_max_frames_size, get_frame_size
 )
 from explosion import explode
 from game_utils import (
@@ -76,7 +76,7 @@ async def fire(canvas, start_row, start_column,
                 return
 
 
-async def spaceship(canvas, row, column, frames):
+async def spaceship(canvas, row, column, frames, gameover_frame):
     current_row, current_column = row, column
     min_row = min_column = 1
     rows, columns = canvas.getmaxyx()  # legacy curses feature, returns wrong values
@@ -106,6 +106,13 @@ async def spaceship(canvas, row, column, frames):
         await asyncio.sleep(0)
         draw_frame(canvas, current_row, current_column, frame, negative=True)
 
+        for obstacle in OBSTACLES:
+            if obstacle.has_collision(current_row, current_column,
+                                      frame_rows, frame_columns):
+                COROUTINES.append(show_gameover(canvas, gameover_frame))
+                return
+
+
 
 async def fill_orbit_with_garbage(canvas, frames, explosion_frames):
     rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
@@ -124,7 +131,7 @@ async def fly_garbage(canvas, column, garbage_frame, explosion_frames,
 
     rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
     columns_number -= 1  # the coordinates of the last cell are 1 smaller
-    frame_rows, frame_columns = get_max_frames_size([garbage_frame])
+    frame_rows, frame_columns = get_frame_size(garbage_frame)
 
     column = median([0, column, columns_number - frame_columns])
     row = 0
@@ -147,6 +154,21 @@ async def fly_garbage(canvas, column, garbage_frame, explosion_frames,
     OBSTACLES.remove(obstacle)
 
 
+async def show_gameover(canvas, gameover_frame):
+    rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+    max_row, max_column = rows_number - 1, columns_number - 1  # the coordinates of the last cell are 1 smaller
+    frame_rows, frame_columns = get_frame_size(gameover_frame)
+
+    row = (max_row - frame_rows) // 2
+    column = (max_column - frame_columns) // 2
+    while True:
+        draw_frame(canvas, row, column, gameover_frame)
+        await asyncio.sleep(0)
+        draw_frame(canvas, row, column, gameover_frame, negative=True)
+
+
+
+
 def draw(canvas):
     canvas.border()
     canvas.nodelay(True)
@@ -160,7 +182,8 @@ def draw(canvas):
     max_row, max_column = rows - 1, columns - 1  # the coordinates of the last cell are 1 smaller
     frames = get_frames('frames')
     COROUTINES.extend([
-        spaceship(canvas, max_row // 2, max_column // 2, frames['rocket']),
+        spaceship(canvas, max_row // 2, max_column // 2, frames['rocket'],
+                  frames['gameover'][0]),
         fill_orbit_with_garbage(canvas, frames['trash'], frames['explosion']),
     ])
     COROUTINES.extend([
