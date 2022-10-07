@@ -5,6 +5,7 @@ import time
 from itertools import cycle
 from statistics import median
 
+import config
 from curses_tools import (
     draw_frame,
     read_controls,
@@ -100,7 +101,7 @@ async def spaceship(canvas, row, column, frames, gameover_frame):
             [min_column, current_column+column_speed, max_column]
         )
 
-        if space_pressed and YEAR > 2020:
+        if space_pressed and YEAR > config.FIRE_START_YEAR:
             fire_column = current_column + frame_columns // 2  # as current_column points to the left edge of the frame
             COROUTINES.append(fire(canvas, current_row, fire_column))
 
@@ -191,7 +192,7 @@ async def change_year():
 
     while True:
         YEAR += 1
-        await make_delay(10)
+        await make_delay(config.CHANGE_YEAR_DELAY)
 
 
 def draw(canvas):
@@ -199,27 +200,39 @@ def draw(canvas):
     canvas.nodelay(True)
     curses.curs_set(False)
 
-    symbols = '+*.:'
-    tic_timeout = 0.1
-    stars_count = 100
-
     rows, columns = canvas.getmaxyx()  # legacy curses feature, returns wrong values
     max_row, max_column = rows - 1, columns - 1  # the coordinates of the last cell are 1 smaller
 
-    frames = get_frames('frames')
-    COROUTINES.extend([
-        spaceship(canvas, max_row // 2, max_column // 2, frames['rocket'],
-                  frames['gameover'][0]),
-        fill_orbit_with_garbage(canvas, frames['trash'], frames['explosion']),
-        show_game_description(canvas),
-        change_year()
-    ])
-    COROUTINES.extend([
-        blink(canvas,
-              **get_symbol_coordinates(max_row, max_column),
-              symbol=random.choice(symbols),
-              delay=random.randint(1, 5)) for _ in range(stars_count)
-    ])
+    frames = get_frames(config.FRAMES_FOLDER_PATH)
+    COROUTINES.extend(
+        [
+            spaceship(
+                canvas,
+                max_row // 2, max_column // 2,
+                frames['rocket'], frames['gameover'][0],
+            ),
+            fill_orbit_with_garbage(
+                canvas,
+                frames['trash'], frames['explosion'],
+            ),
+            show_game_description(canvas),
+            change_year(),
+        ]
+    )
+    COROUTINES.extend(
+        [
+            blink(
+                canvas,
+                **get_symbol_coordinates(max_row, max_column),
+                symbol=random.choice(config.STAR_SYMBOLS),
+                delay=random.randint(
+                    config.MIN_BLINK_DELAY,
+                    config.MAX_BLINK_DELAY,
+                ),
+            )
+            for _ in range(config.STARS_COUNT)
+        ]
+    )
 
     while True:
         for coroutine in COROUTINES.copy():
@@ -228,7 +241,7 @@ def draw(canvas):
             except StopIteration:
                 COROUTINES.remove(coroutine)
         canvas.refresh()
-        time.sleep(tic_timeout)
+        time.sleep(config.TIC_TIMEOUT)
 
 
 if __name__ == '__main__':
