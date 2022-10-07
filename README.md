@@ -14,7 +14,7 @@ $ cd space_game
 Запустите скрипт:
 
 ```shell
-$ python3 main.py
+$ python3 src/main.py
 ```
 
 ## Цель проекта
