@@ -28,7 +28,7 @@ OBSTACLES_IN_LAST_COLLISIONS = []
 YEAR = 1957
 
 
-async def blink(canvas, row, column, symbol='*', delay=0):
+async def animate_star_blink(canvas, row, column, symbol='*', delay=0):
     await make_delay(delay)
 
     while True:
@@ -38,15 +38,9 @@ async def blink(canvas, row, column, symbol='*', delay=0):
         canvas.addstr(row, column, symbol)
         await make_delay(3)
 
-        canvas.addstr(row, column, symbol, curses.A_BOLD)
-        await make_delay(5)
 
-        canvas.addstr(row, column, symbol)
-        await make_delay(3)
-
-
-async def fire(canvas, start_row, start_column,
-               rows_speed=-0.3, columns_speed=0):
+async def animate_fire(canvas, start_row, start_column,
+                       rows_speed=-0.3, columns_speed=0):
     row, column = start_row, start_column
 
     canvas.addstr(round(row), round(column), '*')
@@ -79,7 +73,7 @@ async def fire(canvas, start_row, start_column,
                 return
 
 
-async def spaceship(canvas, row, column, frames, gameover_frame):
+async def animate_spaceship(canvas, row, column, frames, gameover_frame):
     current_row, current_column = row, column
     min_row = min_column = 1
     rows, columns = canvas.getmaxyx()  # legacy curses feature, returns wrong values
@@ -103,7 +97,7 @@ async def spaceship(canvas, row, column, frames, gameover_frame):
 
         if space_pressed and YEAR > config.FIRE_START_YEAR:
             fire_column = current_column + frame_columns // 2  # as current_column points to the left edge of the frame
-            COROUTINES.append(fire(canvas, current_row, fire_column))
+            COROUTINES.append(animate_fire(canvas, current_row, fire_column))
 
         draw_frame(canvas, current_row, current_column, frame)
         await asyncio.sleep(0)
@@ -128,12 +122,12 @@ async def fill_orbit_with_garbage(canvas, frames, explosion_frames):
             await make_delay(1)
             continue
 
-        COROUTINES.append(fly_garbage(canvas, column, frame, explosion_frames))
+        COROUTINES.append(animate_garbage(canvas, column, frame, explosion_frames))
         await make_delay(delay)
 
 
-async def fly_garbage(canvas, column, garbage_frame, explosion_frames,
-                      speed=0.5):
+async def animate_garbage(canvas, column, garbage_frame, explosion_frames,
+                          speed=0.5):
     """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
 
     rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
@@ -206,7 +200,7 @@ def draw(canvas):
     frames = get_frames(config.FRAMES_FOLDER_PATH)
     COROUTINES.extend(
         [
-            spaceship(
+            animate_spaceship(
                 canvas,
                 max_row // 2, max_column // 2,
                 frames['rocket'], frames['gameover'][0],
@@ -221,7 +215,7 @@ def draw(canvas):
     )
     COROUTINES.extend(
         [
-            blink(
+            animate_star_blink(
                 canvas,
                 **get_symbol_coordinates(max_row, max_column),
                 symbol=random.choice(config.STAR_SYMBOLS),
