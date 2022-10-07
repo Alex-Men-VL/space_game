@@ -31,12 +31,17 @@ YEAR = 1957
 async def animate_star_blink(canvas, row, column, symbol='*', delay=0):
     await make_delay(delay)
 
-    while True:
-        canvas.addstr(row, column, symbol, curses.A_DIM)
-        await make_delay(20)
+    brightness_per_delay = [
+        (curses.A_DIM, 20),
+        (curses.A_NORMAL, 3),
+        (curses.A_BOLD, 5),
+        (curses.A_NORMAL, 3),
+    ]
 
-        canvas.addstr(row, column, symbol)
-        await make_delay(3)
+    while True:
+        for brightness, delay in brightness_per_delay:
+            canvas.addstr(row, column, symbol, brightness)
+            await make_delay(delay)
 
 
 async def animate_fire(canvas, start_row, start_column,
@@ -235,6 +240,9 @@ def draw(canvas):
             except StopIteration:
                 COROUTINES.remove(coroutine)
         canvas.refresh()
+        canvas.border()  # To fix bug with broken border
+        canvas.refresh()
+
         time.sleep(config.TIC_TIMEOUT)
 
 

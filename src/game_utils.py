@@ -25,7 +25,7 @@ def get_frames(frame_folder):
 
         with open(file_path) as frame_file:
             frame = frame_file.read()
-        frame_type = file_name.split('_')[0]
+        frame_type, *_ = file_name.split('_')
         frames.setdefault(frame_type, []).append(frame)
     return frames
 
