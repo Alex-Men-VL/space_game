@@ -9,7 +9,8 @@ import config
 from curses_tools import (
     draw_frame,
     read_controls,
-    get_max_frames_size, get_frame_size
+    get_max_frames_size,
+    get_frame_size,
 )
 from explosion import explode
 from game_scenario import PHRASES, get_garbage_delay_tics
@@ -17,7 +18,7 @@ from game_utils import (
     get_symbol_coordinates,
     make_delay,
     get_frames,
-    get_frame_per_tic
+    get_frame_per_tic,
 )
 from obstacles import Obstacle
 from physics import update_speed
@@ -44,8 +45,9 @@ async def animate_star_blink(canvas, row, column, symbol='*', delay=0):
             await make_delay(delay)
 
 
-async def animate_fire(canvas, start_row, start_column,
-                       rows_speed=-0.3, columns_speed=0):
+async def animate_fire(
+    canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
+):
     row, column = start_row, start_column
 
     canvas.addstr(round(row), round(column), '*')
@@ -60,8 +62,14 @@ async def animate_fire(canvas, start_row, start_column,
 
     symbol = '-' if columns_speed else '|'
 
-    rows, columns = canvas.getmaxyx()  # legacy curses feature, returns wrong values
-    max_row, max_column = rows - 1, columns - 1  # the coordinates of the last cell are 1 smaller
+    (
+        rows,
+        columns,
+    ) = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+    max_row, max_column = (
+        rows - 1,
+        columns - 1,
+    )  # the coordinates of the last cell are 1 smaller
 
     curses.beep()
 
@@ -81,8 +89,14 @@ async def animate_fire(canvas, start_row, start_column,
 async def animate_spaceship(canvas, row, column, frames, gameover_frame):
     current_row, current_column = row, column
     min_row = min_column = 1
-    rows, columns = canvas.getmaxyx()  # legacy curses feature, returns wrong values
-    max_row, max_column = rows - 1, columns - 1  # the coordinates of the last cell are 1 smaller
+    (
+        rows,
+        columns,
+    ) = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+    max_row, max_column = (
+        rows - 1,
+        columns - 1,
+    )  # the coordinates of the last cell are 1 smaller
     frame_rows, frame_columns = get_max_frames_size(frames)
     max_row -= frame_rows
     max_column -= frame_columns
@@ -90,18 +104,19 @@ async def animate_spaceship(canvas, row, column, frames, gameover_frame):
 
     for frame in cycle(get_frame_per_tic(frames)):
         row_offset, column_offset, space_pressed = read_controls(canvas)
-        row_speed, column_speed = update_speed(row_speed, column_speed,
-                                               row_offset, column_offset)
-
-        current_row = median(
-            [min_row, current_row+row_speed, max_row]
+        row_speed, column_speed = update_speed(
+            row_speed, column_speed, row_offset, column_offset
         )
+
+        current_row = median([min_row, current_row + row_speed, max_row])
         current_column = median(
-            [min_column, current_column+column_speed, max_column]
+            [min_column, current_column + column_speed, max_column]
         )
 
         if space_pressed and YEAR > config.FIRE_START_YEAR:
-            fire_column = current_column + frame_columns // 2  # as current_column points to the left edge of the frame
+            fire_column = (
+                current_column + frame_columns // 2
+            )  # as current_column points to the left edge of the frame
             COROUTINES.append(animate_fire(canvas, current_row, fire_column))
 
         draw_frame(canvas, current_row, current_column, frame)
@@ -109,15 +124,22 @@ async def animate_spaceship(canvas, row, column, frames, gameover_frame):
         draw_frame(canvas, current_row, current_column, frame, negative=True)
 
         for obstacle in OBSTACLES:
-            if obstacle.has_collision(current_row, current_column,
-                                      frame_rows, frame_columns):
+            if obstacle.has_collision(
+                current_row, current_column, frame_rows, frame_columns
+            ):
                 COROUTINES.append(show_gameover(canvas, gameover_frame))
                 return
 
 
 async def fill_orbit_with_garbage(canvas, frames, explosion_frames):
-    rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
-    max_row, max_column = rows_number - 1, columns_number - 1  # the coordinates of the last cell are 1 smaller
+    (
+        rows_number,
+        columns_number,
+    ) = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+    max_row, max_column = (
+        rows_number - 1,
+        columns_number - 1,
+    )  # the coordinates of the last cell are 1 smaller
 
     while True:
         column = get_symbol_coordinates(max_row, max_column)['column']
@@ -127,15 +149,21 @@ async def fill_orbit_with_garbage(canvas, frames, explosion_frames):
             await make_delay(1)
             continue
 
-        COROUTINES.append(animate_garbage(canvas, column, frame, explosion_frames))
+        COROUTINES.append(
+            animate_garbage(canvas, column, frame, explosion_frames)
+        )
         await make_delay(delay)
 
 
-async def animate_garbage(canvas, column, garbage_frame, explosion_frames,
-                          speed=0.5):
-    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
+async def animate_garbage(
+    canvas, column, garbage_frame, explosion_frames, speed=0.5
+):
+    """Animate garbage, flying from top to bottom.
+    Сolumn position will stay same, as specified on start."""
 
-    rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+    # legacy curses feature, returns wrong values
+    rows_number, columns_number = canvas.getmaxyx()
+
     columns_number -= 1  # the coordinates of the last cell are 1 smaller
     frame_rows, frame_columns = get_frame_size(garbage_frame)
 
@@ -161,8 +189,13 @@ async def animate_garbage(canvas, column, garbage_frame, explosion_frames,
 
 
 async def show_gameover(canvas, gameover_frame):
-    rows_number, columns_number = canvas.getmaxyx()  # legacy curses feature, returns wrong values
-    max_row, max_column = rows_number - 1, columns_number - 1  # the coordinates of the last cell are 1 smaller
+    # legacy curses feature, returns wrong values
+    rows_number, columns_number = canvas.getmaxyx()
+
+    max_row, max_column = (
+        rows_number - 1,
+        columns_number - 1,
+    )  # the coordinates of the last cell are 1 smaller
     frame_rows, frame_columns = get_frame_size(gameover_frame)
 
     row = (max_row - frame_rows) // 2
@@ -199,20 +232,28 @@ def draw(canvas):
     canvas.nodelay(True)
     curses.curs_set(False)
 
-    rows, columns = canvas.getmaxyx()  # legacy curses feature, returns wrong values
-    max_row, max_column = rows - 1, columns - 1  # the coordinates of the last cell are 1 smaller
+    # legacy curses feature, returns wrong values
+    rows, columns = canvas.getmaxyx()
+
+    max_row, max_column = (
+        rows - 1,
+        columns - 1,
+    )  # the coordinates of the last cell are 1 smaller
 
     frames = get_frames(config.FRAMES_FOLDER_PATH)
     COROUTINES.extend(
         [
             animate_spaceship(
                 canvas,
-                max_row // 2, max_column // 2,
-                frames['rocket'], frames['gameover'][0],
+                max_row // 2,
+                max_column // 2,
+                frames['rocket'],
+                frames['gameover'][0],
             ),
             fill_orbit_with_garbage(
                 canvas,
-                frames['trash'], frames['explosion'],
+                frames['trash'],
+                frames['explosion'],
             ),
             show_game_description(canvas),
             change_year(),

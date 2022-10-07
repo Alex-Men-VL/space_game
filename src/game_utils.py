@@ -5,8 +5,10 @@ import random
 
 def get_symbol_coordinates(max_row, max_column):
     coordinates = {
-        'row': random.randint(1, max_row - 1),  # subtract 1 so as not to get the coordinate of the border
-        'column': random.randint(1, max_column - 1)
+        'row': random.randint(
+            1, max_row - 1
+        ),  # subtract 1 so as not to get the coordinate of the border
+        'column': random.randint(1, max_column - 1),
     }
     return coordinates
 
