@@ -215,7 +215,7 @@ async def animate_garbage(
     column: int,
     garbage_frame: str,
     explosion_frames: list[str],
-    speed: int = 0.5,
+    speed: float = 0.5,
 ) -> None:
     """Animate garbage, flying from top to bottom.
     Column position will stay same, as specified on start.
