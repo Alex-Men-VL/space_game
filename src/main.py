@@ -29,7 +29,23 @@ OBSTACLES_IN_LAST_COLLISIONS = []
 YEAR = 1957
 
 
-async def animate_star_blink(canvas, row, column, symbol='*', delay=0):
+async def animate_star_blink(
+    canvas: curses.window,
+    row: int,
+    column: int,
+    symbol: str = '*',
+    delay: int = 0,
+) -> None:
+    """Animate twinkling star.
+
+    Args:
+        canvas: Main window;
+        row: Current row position of star;
+        column: Current column position of star
+        symbol: Star symbol;
+        delay: Delay in star twinkling.
+    """
+
     await make_delay(delay)
 
     brightness_per_delay = [
@@ -46,8 +62,22 @@ async def animate_star_blink(canvas, row, column, symbol='*', delay=0):
 
 
 async def animate_fire(
-    canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
-):
+    canvas: curses.window,
+    start_row: int,
+    start_column: int,
+    rows_speed: int = -0.3,
+    columns_speed: int = 0,
+) -> None:
+    """Animate spaceship fire.
+
+    Args:
+        canvas: Main window;
+        start_row: Start row position of fire;
+        start_column: Start column position of fire;
+        rows_speed: Vertical speed;
+        columns_speed: Horizontal speed.
+    """
+
     row, column = start_row, start_column
 
     canvas.addstr(round(row), round(column), '*')
@@ -62,10 +92,9 @@ async def animate_fire(
 
     symbol = '-' if columns_speed else '|'
 
-    (
-        rows,
-        columns,
-    ) = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+    # legacy curses feature, returns wrong values
+    rows, columns = canvas.getmaxyx()
+
     max_row, max_column = (
         rows - 1,
         columns - 1,
@@ -81,28 +110,45 @@ async def animate_fire(
         column += columns_speed
 
         for obstacle in OBSTACLES:
+            # Handle collision with obstacles
             if obstacle.has_collision(row, column):
                 OBSTACLES_IN_LAST_COLLISIONS.append(obstacle)
                 return
 
 
-async def animate_spaceship(canvas, row, column, frames, gameover_frame):
+async def animate_spaceship(
+    canvas: curses.window,
+    row: int,
+    column: int,
+    spaceship_frames: list[str],
+    gameover_frame: str,
+) -> None:
+    """Animate spaceship in current position.
+
+    Args:
+        canvas: Main window;
+        row: Current position row;
+        column: Current position column;
+        spaceship_frames: List of spaceship animations;
+        gameover_frame: Frame for gameover inscription.
+    """
+
     current_row, current_column = row, column
     min_row = min_column = 1
-    (
-        rows,
-        columns,
-    ) = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+
+    # legacy curses feature, returns wrong values
+    rows, columns = canvas.getmaxyx()
+
     max_row, max_column = (
         rows - 1,
         columns - 1,
     )  # the coordinates of the last cell are 1 smaller
-    frame_rows, frame_columns = get_max_frames_size(frames)
+    frame_rows, frame_columns = get_max_frames_size(spaceship_frames)
     max_row -= frame_rows
     max_column -= frame_columns
     row_speed = column_speed = 0
 
-    for frame in cycle(get_frame_per_tic(frames)):
+    for frame in cycle(get_frame_per_tic(spaceship_frames)):
         row_offset, column_offset, space_pressed = read_controls(canvas)
         row_speed, column_speed = update_speed(
             row_speed, column_speed, row_offset, column_offset
@@ -124,6 +170,7 @@ async def animate_spaceship(canvas, row, column, frames, gameover_frame):
         draw_frame(canvas, current_row, current_column, frame, negative=True)
 
         for obstacle in OBSTACLES:
+            # Handle collision with obstacles
             if obstacle.has_collision(
                 current_row, current_column, frame_rows, frame_columns
             ):
@@ -131,11 +178,22 @@ async def animate_spaceship(canvas, row, column, frames, gameover_frame):
                 return
 
 
-async def fill_orbit_with_garbage(canvas, frames, explosion_frames):
-    (
-        rows_number,
-        columns_number,
-    ) = canvas.getmaxyx()  # legacy curses feature, returns wrong values
+async def fill_orbit_with_garbage(
+    canvas: curses.window,
+    garbage_frames: list[str],
+    explosion_frames: list[str],
+) -> None:
+    """Animate stream of garbage
+
+    Args:
+        canvas: Main window;
+        garbage_frames: List of garbage animations;
+        explosion_frames: List of garbage explosion animations.
+    """
+
+    # legacy curses feature, returns wrong values
+    rows_number, columns_number = canvas.getmaxyx()
+
     max_row, max_column = (
         rows_number - 1,
         columns_number - 1,
@@ -143,7 +201,7 @@ async def fill_orbit_with_garbage(canvas, frames, explosion_frames):
 
     while True:
         column = get_symbol_coordinates(max_row, max_column)['column']
-        frame = random.choice(frames)
+        frame = random.choice(garbage_frames)
         delay = get_garbage_delay_tics(YEAR)
         if not delay:
             await make_delay(1)
@@ -156,10 +214,22 @@ async def fill_orbit_with_garbage(canvas, frames, explosion_frames):
 
 
 async def animate_garbage(
-    canvas, column, garbage_frame, explosion_frames, speed=0.5
-):
+    canvas: curses.window,
+    column: int,
+    garbage_frame: str,
+    explosion_frames: list[str],
+    speed: int = 0.5,
+) -> None:
     """Animate garbage, flying from top to bottom.
-    Сolumn position will stay same, as specified on start."""
+    Column position will stay same, as specified on start.
+
+    Args:
+        canvas: Main window;
+        column: Current column position;
+        garbage_frame: Frame for garbage animation;
+        explosion_frames: List of garbage explosion animations;
+        speed: Speed for garbage animation.
+    """
 
     # legacy curses feature, returns wrong values
     rows_number, columns_number = canvas.getmaxyx()
@@ -188,7 +258,14 @@ async def animate_garbage(
     OBSTACLES.remove(obstacle)
 
 
-async def show_gameover(canvas, gameover_frame):
+async def show_gameover(canvas: curses.window, gameover_frame: str) -> None:
+    """Display gameover inscription.
+
+    Args:
+        canvas: Main window;
+        gameover_frame: Frame for inscription.
+    """
+
     # legacy curses feature, returns wrong values
     rows_number, columns_number = canvas.getmaxyx()
 
@@ -206,7 +283,13 @@ async def show_gameover(canvas, gameover_frame):
         draw_frame(canvas, row, column, gameover_frame, negative=True)
 
 
-async def show_game_description(canvas):
+async def show_game_description(canvas: curses.window) -> None:
+    """Display game description.
+
+    Args:
+        canvas: Main window.
+    """
+
     row = column = 1
     while True:
         phrase = PHRASES.get(YEAR)
@@ -219,7 +302,9 @@ async def show_game_description(canvas):
         draw_frame(canvas, row, column, frame, negative=True)
 
 
-async def change_year():
+async def change_year() -> None:
+    """Change game year."""
+
     global YEAR
 
     while True:
@@ -227,7 +312,13 @@ async def change_year():
         await make_delay(config.CHANGE_YEAR_DELAY)
 
 
-def draw(canvas):
+def draw(canvas: curses.window) -> None:
+    """Draw game.
+
+    Args:
+        canvas: Main window.
+    """
+
     canvas.border()
     canvas.nodelay(True)
     curses.curs_set(False)

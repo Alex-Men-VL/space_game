@@ -10,7 +10,16 @@ PHRASES = {
 }
 
 
-def get_garbage_delay_tics(year):
+def get_garbage_delay_tics(year: int) -> int | None:
+    """Get garbage delay for current year.
+
+    Args:
+        year: Current year.
+
+    Returns:
+        Delay.
+    """
+
     if year < 1961:
         return None
     elif year < 1969:
