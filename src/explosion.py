@@ -1,7 +1,8 @@
 import asyncio
 import curses
 
-from curses_tools import draw_frame, get_max_frames_size
+from curses_tools import draw_frame
+from curses_tools import get_max_frames_size
 
 
 async def explode(

@@ -6,20 +6,17 @@ from itertools import cycle
 from statistics import median
 
 import config
-from curses_tools import (
-    draw_frame,
-    read_controls,
-    get_max_frames_size,
-    get_frame_size,
-)
+from curses_tools import draw_frame
+from curses_tools import get_frame_size
+from curses_tools import get_max_frames_size
+from curses_tools import read_controls
 from explosion import explode
-from game_scenario import PHRASES, get_garbage_delay_tics
-from game_utils import (
-    get_symbol_coordinates,
-    make_delay,
-    get_frames,
-    get_frame_per_tic,
-)
+from game_scenario import get_garbage_delay_tics
+from game_scenario import PHRASES
+from game_utils import get_frame_per_tic
+from game_utils import get_frames
+from game_utils import get_symbol_coordinates
+from game_utils import make_delay
 from obstacles import Obstacle
 from physics import update_speed
 
