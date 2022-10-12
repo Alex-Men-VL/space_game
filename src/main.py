@@ -368,7 +368,6 @@ def draw(canvas: curses.window) -> None:
                 coroutine.send(None)
             except StopIteration:
                 COROUTINES.remove(coroutine)
-        canvas.refresh()
         canvas.border()  # To fix bug with broken border
         canvas.refresh()
 
